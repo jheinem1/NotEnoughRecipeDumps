@@ -12,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.jetbrains.annotations.NotNull;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -39,6 +38,7 @@ public class RecipeDumper extends DataDumper {
     public int totalQueries = -1;
     public int dumpedQueries = -1;
     private boolean dumpActive = false;
+    private volatile File currentDumpFile = null;
     private final Timer timer = new Timer();
     private RecipeDumpContext context = null;
 
@@ -173,7 +173,6 @@ public class RecipeDumper extends DataDumper {
         }
     }
 
-    @NotNull
     private RecipeDumpContext setupNewContext() {
         RecipeDumpContext context = new RecipeDumpContext();
         DumperRegistry.setContext(context);
@@ -209,12 +208,14 @@ public class RecipeDumper extends DataDumper {
             return;
         }
         dumpActive = true;
+        currentDumpFile = file;
         TimerTask progressTask = getProgressTask();
         Thread workerThread = new Thread(() -> {
             try {
                 doDumpJson(file);
             } finally {
                 dumpActive = false;
+                currentDumpFile = null;
                 progressTask.cancel();
             }
             NEIClientUtils.printChatMessage(new ChatComponentTranslation("nei.options.tools.dump.recipes.complete"));
@@ -222,22 +223,34 @@ public class RecipeDumper extends DataDumper {
         workerThread.start();
     }
 
-    @NotNull
     private TimerTask getProgressTask() {
         TimerTask progressTask = new TimerTask() {
 
             @Override
             public void run() {
+                float percent = totalQueries > 0 ? (float) dumpedQueries / totalQueries * 100 : 0f;
+                long sizeBytes = currentDumpFile != null ? currentDumpFile.length() : 0L;
                 NEIClientUtils.printChatMessage(
                     new ChatComponentTranslation(
                         "nei.options.tools.dump.recipes.progress",
                         dumpedQueries,
                         totalQueries,
-                        (float) dumpedQueries / totalQueries * 100));
+                        percent,
+                        formatFileSize(sizeBytes)));
             }
         };
         timer.schedule(progressTask, 0, PROGRESS_INTERVAL);
         return progressTask;
+    }
+
+    private static String formatFileSize(long bytes) {
+        if (bytes < 1024L) return bytes + " B";
+        double kib = bytes / 1024.0;
+        if (kib < 1024.0) return String.format("%.1f KB", kib);
+        double mib = kib / 1024.0;
+        if (mib < 1024.0) return String.format("%.1f MB", mib);
+        double gib = mib / 1024.0;
+        return String.format("%.2f GB", gib);
     }
 
     @Override

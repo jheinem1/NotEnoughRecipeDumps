@@ -29,6 +29,10 @@ import java.util.concurrent.TimeUnit
 buildscript {
     repositories {
         maven {
+            name "GTNH Releases"
+            url "https://nexus.gtnewhorizons.com/repository/releases/"
+        }
+        maven {
             // GTNH RetroFuturaGradle and ASM Fork
             name "GTNH Maven"
             url "https://nexus.gtnewhorizons.com/repository/public/"
@@ -53,7 +57,7 @@ plugins {
     id 'com.diffplug.spotless' version '6.13.0' apply false // 6.13.0 is the last jvm8 supporting version
     id 'com.modrinth.minotaur' version '2.+' apply false
     id 'com.matthewprenger.cursegradle' version '1.4.0' apply false
-    id 'com.gtnewhorizons.retrofuturagradle' version '1.3.27'
+    id 'com.gtnewhorizons.retrofuturagradle' version '1.4.7'
 }
 
 print("You might want to check out './gradlew :faq' if your build fails.\n")
@@ -1064,8 +1068,14 @@ idea {
                     moduleName = project.name + ".ideVirtualMain"
                     afterEvaluate {
                         workingDirectory = tasks.runClient.workingDir.absolutePath
-                        programParameters = tasks.runClient.calculateArgs(project).collect { '"' + it + '"' }.join(' ')
-                        jvmArgs = tasks.runClient.calculateJvmArgs(project).collect { '"' + it + '"' }.join(' ') +
+                        def runClientProgramArgs = tasks.runClient.metaClass.respondsTo(tasks.runClient, "calculateArgs", Project)
+                            ? tasks.runClient.calculateArgs(project)
+                            : tasks.runClient.args
+                        def runClientJvmArgs = tasks.runClient.metaClass.respondsTo(tasks.runClient, "calculateJvmArgs", Project)
+                            ? tasks.runClient.calculateJvmArgs(project)
+                            : tasks.runClient.jvmArgs
+                        programParameters = runClientProgramArgs.collect { '"' + it + '"' }.join(' ')
+                        jvmArgs = runClientJvmArgs.collect { '"' + it + '"' }.join(' ') +
                             ' ' + tasks.runClient.systemProperties.collect { '"-D' + it.key + '=' + it.value.toString() + '"' }.join(' ') +
                             coreModArgs
                     }
@@ -1075,8 +1085,14 @@ idea {
                     moduleName = project.name + ".ideVirtualMain"
                     afterEvaluate {
                         workingDirectory = tasks.runServer.workingDir.absolutePath
-                        programParameters = tasks.runServer.calculateArgs(project).collect { '"' + it + '"' }.join(' ')
-                        jvmArgs = tasks.runServer.calculateJvmArgs(project).collect { '"' + it + '"' }.join(' ') +
+                        def runServerProgramArgs = tasks.runServer.metaClass.respondsTo(tasks.runServer, "calculateArgs", Project)
+                            ? tasks.runServer.calculateArgs(project)
+                            : tasks.runServer.args
+                        def runServerJvmArgs = tasks.runServer.metaClass.respondsTo(tasks.runServer, "calculateJvmArgs", Project)
+                            ? tasks.runServer.calculateJvmArgs(project)
+                            : tasks.runServer.jvmArgs
+                        programParameters = runServerProgramArgs.collect { '"' + it + '"' }.join(' ')
+                        jvmArgs = runServerJvmArgs.collect { '"' + it + '"' }.join(' ') +
                             ' ' + tasks.runServer.systemProperties.collect { '"-D' + it.key + '=' + it.value.toString() + '"' }.join(' ') +
                             coreModArgs
                     }
