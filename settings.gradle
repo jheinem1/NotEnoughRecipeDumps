@@ -2,6 +2,10 @@
 pluginManagement {
     repositories {
         maven {
+            name "GTNH Releases"
+            url "https://nexus.gtnewhorizons.com/repository/releases/"
+        }
+        maven {
             // RetroFuturaGradle
             name "GTNH Maven"
             url "https://nexus.gtnewhorizons.com/repository/public/"

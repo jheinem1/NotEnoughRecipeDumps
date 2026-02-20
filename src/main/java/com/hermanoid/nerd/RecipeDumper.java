@@ -12,7 +12,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.jetbrains.annotations.NotNull;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -173,7 +172,6 @@ public class RecipeDumper extends DataDumper {
         }
     }
 
-    @NotNull
     private RecipeDumpContext setupNewContext() {
         RecipeDumpContext context = new RecipeDumpContext();
         DumperRegistry.setContext(context);
@@ -222,7 +220,6 @@ public class RecipeDumper extends DataDumper {
         workerThread.start();
     }
 
-    @NotNull
     private TimerTask getProgressTask() {
         TimerTask progressTask = new TimerTask() {
 
